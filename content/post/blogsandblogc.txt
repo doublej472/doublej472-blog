@@ -63,3 +63,8 @@ daemon on 1 server.
 Now we are here, I have a decent looking and easy to edit blog that is running
 on OpenBSD using httpd! I'll have some other interesting posts up here soon,
 so keep your eyes out for new posts!
+
+You can find the source code for this website at
+[GitHub](https://github.com/doublej472/doublej472-blog), feel free to open PR's
+for any spelling or grammar issues, or even if you want to add another blog to
+the list above.
