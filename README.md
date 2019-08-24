@@ -1,2 +1,2 @@
-# blogc-example
-An example repository that can be used as base for a blogc website.
+# doublej472-blog
+Source code for my [https://blog.doublej472.com/](personal blog).
