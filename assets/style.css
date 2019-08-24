@@ -63,42 +63,22 @@ body {
   font-size: 1rem;
 }
 
-.site-title a:link {
+.basic-link:link {
   color: black;
   text-decoration: none;
 }
 
-.site-title a:visited {
+.basic-link:visited {
   color: black;
   text-decoration: none;
 }
 
-.site-title a:hover {
+.basic-link:hover {
   color: black;
   text-decoration: underline;
 }
 
-.site-title a:active {
-  color: #303030;
-  text-decoration: underline;
-}
-
-.entry-header-title a:link {
-  color: black;
-  text-decoration: none;
-}
-
-.entry-header-title a:visited {
-  color: black;
-  text-decoration: none;
-}
-
-.entry-header-title a:hover {
-  color: black;
-  text-decoration: underline;
-}
-
-.entry-header-title a:active {
+.basic-link:active {
   color: #303030;
   text-decoration: underline;
 }

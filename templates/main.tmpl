@@ -10,13 +10,17 @@
   </head>
   <body>
     <div class="site-title-container">
-      <h1 class="site-title"><a href="{{ BASE_URL }}/">{{ SITE_TITLE }}</a></h1>
+      <a class="basic-link" href="{{ BASE_URL }}/">
+        <h1 class="site-title">{{ SITE_TITLE }}</h1>
+      </a>
     </div>
     {% block listing %}
     <div class="entry-container">
-      <div class="entry-header">
-        <h3 class="entry-header-title"><a href="{{ BASE_URL }}/post/{{ FILENAME }}/">{{ TITLE }}</a></h3>
-      </div>
+      <a class="basic-link" href="{{ BASE_URL }}/post/{{ FILENAME }}/">
+        <div class="entry-header">
+          <h3 class="entry-header-title">{{ TITLE }}</h3>
+        </div>
+      </a>
       <article class="entry">
         {{ CONTENT }}
       </article>
