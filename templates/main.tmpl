@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="{{ SITE_TAGLINE }}">
+    <title>{{ SITE_TITLE }}{% block entry %}{% ifdef TITLE %} - {{ TITLE }}{% endif %}{% endblock %}{% block listing_once %} - {{ SITE_TAGLINE }}{% endblock %}</title>
+    <link href="{{ BASE_URL }}/assets/style.css" rel="stylesheet" type="text/css">
+    <link href="{{ BASE_URL }}/atom.xml" rel="alternate" type="application/atom+xml" title="{{ SITE_TITLE }}" />
+  </head>
+  <body>
+    <h1>{{ SITE_TITLE }}</h1>
+    {% block listing %}
+    <div class="entry-container">
+      <div class="entry-header">
+        <h3 class="entry-header-title">{{ TITLE }}</h3>
+      </div>
+      <article class="entry">
+        {{ CONTENT }}
+      </article>
+      <div class="entry-endcard">
+        Author: <a href="mailto:{{ AUTHOR_EMAIL }}">{{ AUTHOR_NAME }}</a><br />
+        {% ifdef DATE_FORMATTED %}Published on: {{ DATE_FORMATTED }}<br />{% endif %}
+        <a href="{{ BASE_URL }}/post/{{ FILENAME }}/">Permalink</a>
+      </div>
+    </div>
+    {% endblock %}
+    {% block listing_once %}
+    {% ifdef PREVIOUS_PAGE %}
+    <a class="page-link" href="{% ifdef PREVIOUS_PAGE %}{{ BASE_URL }}/page/{{ PREVIOUS_PAGE }}/{% else %}#{% endif %}">
+      &larr; Newer
+    </a>
+    {% endif %}
+    {% ifdef PREVIOUS_PAGE %}
+    <a class="page-link" href="{% ifdef NEXT_PAGE %}{{ BASE_URL }}/page/{{ NEXT_PAGE }}/{% else %}#{% endif %}">
+      Older &rarr;
+    </a>
+    {% endif %}
+    {% endblock %}
+    {% block entry %}
+    {% ifdef IS_POST %}
+    <div class="entry-container">
+      {% ifdef TITLE %}
+      <div class="entry-header">
+        <h3 class="entry-header-title">{{ TITLE }}</h3>
+      </div>
+      {% endif %}
+      <div class="entry">
+        {{ CONTENT }}
+      </div>
+      <div class="entry-endcard">
+        Author: <a href="mailto:{{ AUTHOR_EMAIL }}">{{ AUTHOR_NAME }}</a><br />
+        {% ifdef DATE_FORMATTED %}Published on: {{ DATE_FORMATTED }}<br />{% endif %}
+        <a href="{{ BASE_URL }}/post/{{ FILENAME }}/">Permalink</a>
+      </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+    <hr>
+    <div class="footer-container">
+      <p class="copyright">&copy; <a href="mailto:{{ AUTHOR_EMAIL }}">{{ AUTHOR_NAME }}</a></p>
+    </div>
+  </body>
+</html>
