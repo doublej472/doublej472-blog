@@ -19,7 +19,7 @@ currently using, and what I'm doing with it. For now, lets talk about how I got
 this blog up and running.
 
 The first step I took was to figure out what blogging software to use. I didn't
-want some bloated Javascript mess that ran slow on devices or servers. I wanted
+want some bloated JavaScript mess that ran slow on devices or servers. I wanted
 a simple, static website that could be served quickly and displayed properly on
 a good range of devices.
 
@@ -33,7 +33,7 @@ website generator for other projects, so feel free to give it a try if you
 want, it's definitely in consideration for any future websites I create.
 
 Afterwards, I spent more time looking for another website generator and found
-[blogc](https://blogc.rgm.io/), a blog complier written in C. blogc isn't a
+[blogc](https://blogc.rgm.io/), a blog compiler written in C. blogc isn't a
 full blogging engine out of the box, it can only compile individual webpages.
 You need to use Makefiles or something similar to build a proper blog.
 Thankfully there is a decent [example
@@ -46,7 +46,7 @@ modification (mostly rewriting where files are located).
 Now I need somewhere to host this blog at. I wanted to use an
 [OpenBSD](https://www.openbsd.org/) server with their
 [httpd](https://man.openbsd.org/httpd.8) daemon to host this blog. This is
-becuase I want to try something different from what I normally do, which is use
+because I want to try something different from what I normally do, which is use
 the [Apache web server](https://httpd.apache.org/) with a server distribution
 of Linux, like [CentOS](https://www.centos.org/). Thankfully, the man pages in
 OpenBSD are nothing short of excellent, and Roman Zolotarev has great posts on
