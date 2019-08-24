@@ -12,7 +12,7 @@
     {% block listing %}
     <div class="entry-container">
       <div class="entry-header">
-        <h3 class="entry-header-title">{{ TITLE }}</h3>
+        <h3 class="entry-header-title"><a href="{{ BASE_URL }}/post/{{ FILENAME }}/">{{ TITLE }}</a></h3>
       </div>
       <article class="entry">
         {{ CONTENT }}
@@ -55,7 +55,6 @@
     </div>
     {% endif %}
     {% endblock %}
-    <hr>
     <div class="footer-container">
       <p class="copyright">&copy; <a href="mailto:{{ AUTHOR_EMAIL }}">{{ AUTHOR_NAME }}</a></p>
     </div>
