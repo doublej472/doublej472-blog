@@ -14,9 +14,9 @@ particular order:
 * [Undeadly](https://undeadly.org/)
 
 Anyways, I've been floating the idea of writing my own blog recently, and now
-I'm giving it a shot! This blog will (for now) focus on whatever open source
-software I'm currently using, and what I'm doing with it. For now, lets talk
-about how I got this blog up and running.
+I'm giving it a shot! This blog will focus on whatever open source software I'm
+currently using, and what I'm doing with it. For now, lets talk about how I got
+this blog up and running.
 
 The first step I took was to figure out what blogging software to use. I didn't
 want some bloated Javascript mess that ran slow on devices or servers. I wanted
@@ -25,20 +25,41 @@ a good range of devices.
 
 [ssg](https://www.romanzolotarev.com/ssg.html) was a early contender, since it
 was very small, simple to use, and ran almost entirely with Bourne shell
-scripting, but it ended up not suiting my needs once I started to build a
-website with it. Mostly, it wasn't simple to stitch multiple blogs together on
-one webpage, each blog post had to be it's own webpage, unless you wanted to
+scripting, but it ended up not suiting my needs once I started building this
+blog. It wasn't possible to easily stitch multiple blog posts together on one
+page. You had to keep each blog post on it's own webpage, unless you wanted to
 copy everything onto one page on your own. It still is a great simple static
-website generator, so feel free to give it a try if you want, it's definitely in
-consideration for any future websites I create.
+website generator for other projects, so feel free to give it a try if you
+want, it's definitely in consideration for any future websites I create.
 
-Afterwards, I spent more time looking for another simple static website
-generator and found [blogc](https://blogc.rgm.io/), a blog complier writing in
-C. blogc isn't a full blogging engine out of the box, it can only compile
-individual webpages. You need to use Makefiles or similar to build an entire
-blog. Thankfully there is an [example
-blog](https://github.com/blogc/blogc-example) with a decent layout that you can
-use to get started easily. In my case, I ripped out the included jquery and
-bootstrap code, and rewrote the templates to work well without them. The
-Makefile worked very well, and needed only minimal modifications (mostly
-rewriting where files are located).
+Afterwards, I spent more time looking for another website generator and found
+[blogc](https://blogc.rgm.io/), a blog complier written in C. blogc isn't a
+full blogging engine out of the box, it can only compile individual webpages.
+You need to use Makefiles or something similar to build a proper blog.
+Thankfully there is a decent [example
+blog](https://github.com/blogc/blogc-example) that you can use to get started
+easily. In my case, I ripped out the included jquery and bootstrap code, and
+rewrote the templates to work well without them, plus adding some CSS of my
+own. The included Makefile works very well, and only needed minimal
+modification (mostly rewriting where files are located).
+
+Now I need somewhere to host this blog at. I wanted to use an
+[OpenBSD](https://www.openbsd.org/) server with their
+[httpd](https://man.openbsd.org/httpd.8) daemon to host this blog. This is
+becuase I want to try something different from what I normally do, which is use
+the [Apache web server](https://httpd.apache.org/) with a server distribution
+of Linux, like [CentOS](https://www.centos.org/). Thankfully, the man pages in
+OpenBSD are nothing short of excellent, and Roman Zolotarev has great posts on
+how to [configure httpd](https://www.romanzolotarev.com/openbsd/httpd.html) and
+[enable HTTPS with Let's
+Encrypt](https://www.romanzolotarev.com/openbsd/acme-client.html).
+
+I also needed a good VPS provider that supports OpenBSD (my home connection is
+pretty terrible), and [Vultr](https://www.vultr.com/servers/openbsd) fits the
+bill perfectly! For now I don't need a loadbalancer (especially for a personal,
+static blog), so people will be fetching webpages directly with the httpd
+daemon on 1 server.
+
+Now we are here, I have a decent looking and easy to edit blog that is running
+on OpenBSD using httpd! I'll have some other interesting posts up here soon,
+so keep your eyes out for new posts!

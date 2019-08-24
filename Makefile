@@ -3,7 +3,7 @@
 AUTHOR_NAME = "Jonathan Frederick"
 AUTHOR_EMAIL = "doublej472@gmail.com"
 SITE_TITLE = "Jonathan Frederick's Blog"
-SITE_TAGLINE = "Open Source Software"
+SITE_TAGLINE = "Open Source Blog"
 LOCALE = "en_US.utf-8"
 
 POSTS_PER_PAGE = 10
