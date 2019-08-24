@@ -8,7 +8,9 @@
     <link href="{{ BASE_URL }}/atom.xml" rel="alternate" type="application/atom+xml" title="{{ SITE_TITLE }}" />
   </head>
   <body>
-    <h1 class="site-title"><a href="{{ BASE_URL }}/">{{ SITE_TITLE }}</a></h1>
+    <div class="site-title-container">
+      <h1 class="site-title"><a href="{{ BASE_URL }}/">{{ SITE_TITLE }}</a></h1>
+    </div>
     {% block listing %}
     <div class="entry-container">
       <div class="entry-header">

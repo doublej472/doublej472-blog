@@ -1,14 +1,20 @@
 body {
   background-image: url("/assets/images/tile.png");
   background-repeat: repeat;
-  padding-left: 0.8rem;
-  padding-right: 0.8rem;
+}
+
+.site-title-container {
+  text-align: center;
 }
 
 .site-title {
+  display: inline-block;
+  padding: 1rem;
   font-size: 3.5rem;
-  margin: 1rem;
-  text-align: center;
+  border: 2px solid black;
+  background: white;
+  margin: auto;
+  margin-bottom: 1rem;
 }
 
 .entry-container {
