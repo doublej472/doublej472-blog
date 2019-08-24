@@ -32,14 +32,14 @@ ENTR ?= $(shell which entr 2> /dev/null)
 MKDIR ?= $(shell which mkdir)
 CP ?= $(shell which cp)
 
-BLOGC_RUNSERVER_HOST ?= 127.0.0.1
+BLOGC_RUNSERVER_HOST ?= 0.0.0.0
 BLOGC_RUNSERVER_PORT ?= 8080
 
 OUTPUT_DIR ?= _build
 BASE_DOMAIN ?= https://blog.doublej472.com
 BASE_URL ?=
 
-DATE_FORMAT = "%b %d, %Y, %I:%M %p GMT"
+DATE_FORMAT = "%b %d, %Y, %I:%M %p PST"
 DATE_FORMAT_ATOM = "%Y-%m-%dT%H:%M:%SZ"
 
 BLOGC_COMMAND = \
