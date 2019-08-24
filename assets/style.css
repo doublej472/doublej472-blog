@@ -5,12 +5,6 @@ body {
   padding-right: 0.8rem;
 }
 
-h1 {
-  font-size: 3.5rem;
-  margin: 1rem;
-  text-align: center;
-}
-
 .entry-container {
   max-width: 80rem;
   border: 2px solid black;
@@ -30,22 +24,48 @@ h1 {
   font-size: 2rem;
 }
 
-.entry-header-title > a:link {
+.site-title {
+  font-size: 3.5rem;
+  margin: 1rem;
+  text-align: center;
+}
+
+.site-title a:link {
   color: black;
   text-decoration: none;
 }
 
-.entry-header-title > a:visited {
+.site-title a:visited {
   color: black;
   text-decoration: none;
 }
 
-.entry-header-title > a:hover {
+.site-title a:hover {
   color: black;
   text-decoration: underline;
 }
 
-.entry-header-title > a:active {
+.site-title a:active {
+  color: #303030;
+  text-decoration: underline;
+}
+
+.entry-header-title a:link {
+  color: black;
+  text-decoration: none;
+}
+
+.entry-header-title a:visited {
+  color: black;
+  text-decoration: none;
+}
+
+.entry-header-title a:hover {
+  color: black;
+  text-decoration: underline;
+}
+
+.entry-header-title a:active {
   color: #303030;
   text-decoration: underline;
 }

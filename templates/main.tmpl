@@ -8,7 +8,7 @@
     <link href="{{ BASE_URL }}/atom.xml" rel="alternate" type="application/atom+xml" title="{{ SITE_TITLE }}" />
   </head>
   <body>
-    <h1>{{ SITE_TITLE }}</h1>
+    <h1 class="site-title"><a href="{{ BASE_URL }}/">{{ SITE_TITLE }}</a></h1>
     {% block listing %}
     <div class="entry-container">
       <div class="entry-header">
@@ -30,7 +30,7 @@
       &larr; Newer
     </a>
     {% endif %}
-    {% ifdef PREVIOUS_PAGE %}
+    {% ifdef NEXT_PAGE %}
     <a class="page-link" href="{% ifdef NEXT_PAGE %}{{ BASE_URL }}/page/{{ NEXT_PAGE }}/{% else %}#{% endif %}">
       Older &rarr;
     </a>
