@@ -5,6 +5,12 @@ body {
   padding-right: 0.8rem;
 }
 
+.site-title {
+  font-size: 3.5rem;
+  margin: 1rem;
+  text-align: center;
+}
+
 .entry-container {
   max-width: 80rem;
   border: 2px solid black;
@@ -15,7 +21,7 @@ body {
 }
 
 .entry-header {
-  padding: 0.3rem;
+  padding: 0.6rem;
   border-bottom: 2px solid black;
 }
 
@@ -24,10 +30,31 @@ body {
   font-size: 2rem;
 }
 
-.site-title {
-  font-size: 3.5rem;
-  margin: 1rem;
-  text-align: center;
+.entry {
+  padding: 0.7rem;
+  padding-top: 0rem;
+  padding-bottom: 0rem;
+  font-size: 1.25rem;
+}
+
+.entry-endcard {
+  padding: 0.3rem;
+  background-color: #e0e0e0;
+  border-top: solid black 2px;
+}
+
+.footer-container {
+  text-align: right;
+}
+
+.footer {
+  background: white;
+  border: 1px solid grey;
+  padding: 0.2rem;
+  color: #404040;
+  display: inline-block;
+  font-family: monospace;
+  font-size: 1rem;
 }
 
 .site-title a:link {
@@ -68,29 +95,4 @@ body {
 .entry-header-title a:active {
   color: #303030;
   text-decoration: underline;
-}
-
-.entry {
-  margin: 0.3rem;
-  font-size: 1.25rem;
-}
-
-.entry-endcard {
-  padding: 0.3rem;
-  background-color: #e0e0e0;
-  border-top: solid black 2px;
-}
-
-.footer-container {
-  text-align: right;
-}
-
-.footer {
-  background: white;
-  border: 1px solid grey;
-  padding: 0.2rem;
-  color: #404040;
-  display: inline-block;
-  font-family: monospace;
-  font-size: 1rem;
 }
