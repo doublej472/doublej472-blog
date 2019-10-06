@@ -1,5 +1,5 @@
-TITLE: Setting up a simple multi-node libvirt cluster on CentOS 8
-DATE: 2019-10-05 18:00:28
+TITLE: Setting up a simple multi-node libvirt VM cluster on CentOS 8
+DATE: 2019-10-05 18:19:05
 -------------------------
 
 I've been running my own homelab for a while, which includes 2 nearly identical
