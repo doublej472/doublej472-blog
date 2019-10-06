@@ -79,6 +79,12 @@
 }
 
 pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
   background: #dfdfdf;
   padding: 0.3rem;
 }
@@ -86,4 +92,16 @@ pre {
 code {
   background: #dfdfdf;
   font-size: 1.0rem;
+}
+
+@media only screen and (max-width: 800px) {
+  pre code {
+    font-size: 0.6rem;
+  }
+}
+
+@media only screen and (min-width: 801px) {
+  pre code {
+    font-size: 1.0rem;
+  }
 }
