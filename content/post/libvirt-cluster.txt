@@ -1,0 +1,352 @@
+TITLE: Setting up a simple multi-node libvirt cluster on CentOS 8
+DATE: 2019-10-05 18:00:28
+-------------------------
+
+I've been running my own homelab for a while, which includes 2 nearly identical
+computers acting as a 2-node [libvirt](https://libvirt.org/) virtual machine
+cluster. My current cluster is running on Debian 10, but I want to try this on
+CentOS 8, which is fairly new at time of writing.
+
+At a high level, this cluster is setup with the storage host running a NFS
+server, and the VM hosts running QEMU+libvirt, with a shared NFS mount from the
+storage server.
+
+This cluster setup supports live-migration between the VM hosts, and rapid
+deployment of VMs using [cloud-init](https://cloud-init.io/) backed images.
+
+For this type of cluster, you ideally need at least 3 nodes, 2 virtual machine
+hosts with very similar or identical CPU's, and 1 storage host that will store
+the virtual machine hard drives and base images.
+
+At the very minimum, your VM hosts need to support the same type of
+virtualization (only Intel or only AMD), and you will need to tweak your
+configuration to use the lowest common set of virtualization technology, such as
+restricting the supported CPU instructions by changing the QEMU CPU model.
+
+You can get also away with using only 2 nodes, with 1 VM host acting as the
+storage host, but you lose flexibility if you need to restart your VM hosts.
+
+## Host Machine Specifications
+
+In this post, I'll be using this setup:
+
+* 2 VM hosts (vmhost1, vmhost2) with 2 cpus, 6 GB of ram, and 15 GB of OS
+  storage.
+* 1 Storage host (vmstorage) with 1 cpu, 4 GB of ram, 15 GB of OS storage, and 100
+  GB of VM storage.
+
+And this network configuration:
+
+* vmhost1: 10.47.100.3/16
+* vmhost2: 10.47.100.4/16
+* vmstorage: 10.47.100.5/16
+
+All of these hosts will be running CentOS 8, and are themselves virtual
+machines, but this can be easily replicated on real hardware.
+
+All of these machines are also on the same network subnet for simplicity, which
+is `10.47.0.0/16` in my case.
+
+I will not be going through the installation of CentOS 8, partially because
+it's outside the scope of this article, partially because I'm using cloud
+images that don't need to be installed in the first place (more on that later).
+However, you **need** to use static IP addresses for network configuration, not
+DHCP. If the IP address on one of these machines changes, you will have a bad
+day when NFS stops working.
+
+## Storage Host Configuration
+
+First we need to configure the storage host so that we have a place for storage
+on the virtual machines. Let's see what we have to work with on `vmstorage`:
+
+  $ lsblk
+  NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+  sda      8:0    0   15G  0 disk
+  └─sda1   8:1    0   15G  0 part /
+  sdb      8:16   0  100G  0 disk
+  sr0     11:0    1  366K  0 rom
+
+So we have the OS disk at `/dev/sda`, and the VM storage disk at `/dev/sdb`.
+Let's create 1 partition on `/dev/sdb` that spans the entire disk, format it
+with XFS (because it's fast and mature), and mount it at `/data/vmstorage`.
+
+  $ sudo mkdir -p /data/vmstorage
+  $ sudo parted /dev/sdb
+  GNU Parted 3.2
+  Using /dev/sdb
+  Welcome to GNU Parted! Type 'help' to view a list of commands.
+  (parted) mklabel GPT
+  (parted) mkpart vmstorage xfs 0% 100%
+  (parted) q
+  Information: You may need to update /etc/fstab.
+
+  $ sudo mkfs.xfs -L vmstorage /dev/sdb1
+  meta-data=/dev/sdb1              isize=512    agcount=4, agsize=6553472 blks
+           =                       sectsz=512   attr=2, projid32bit=1
+           =                       crc=1        finobt=1, sparse=1, rmapbt=0
+           =                       reflink=1
+  data     =                       bsize=4096   blocks=26213888, imaxpct=25
+           =                       sunit=0      swidth=0 blks
+  naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+  log      =internal log           bsize=4096   blocks=12799, version=2
+           =                       sectsz=512   sunit=0 blks, lazy-count=1
+  realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+Here is a simple one-liner to add an entry to `/etc/fstab`, which will
+auto-mount this drive on system startup. I am using UUIDs here, because
+entries in `/dev/sd*` change between kernel versions, bios updates, hardware
+changes, etc.
+
+**Tweak to match your configuration!**
+
+  $ echo "UUID=$(sudo blkid /dev/sdb1 -s UUID -o value) \
+    /data/vmstorage xfs rw,noatime,noquota 0 2" \
+    | sudo tee -a /etc/fstab
+
+  $ sudo mount /data/vmstorage
+
+As long as the above `mount` command doesn't show any errors, we should have a
+working storage drive. We can check the available space on that drive with the
+`df` command:
+
+  $ df -h /data/vmstorage
+  Filesystem      Size  Used Avail Use% Mounted on
+  /dev/sdb1       100G  747M  100G   1% /data/vmstorage
+
+Now that we have a storage drive setup we can export it over NFS. You will need
+the IP addresses of your VM hosts for this step.
+
+  $ sudo yum -y install nfs-utils
+  $ sudo systemctl enable nfs-server.service
+  $ sudo systemctl start nfs-server.service
+
+Now we need to update the `/etc/exports` file to allow our vmhosts to mount the
+VM storage directory. You don't actually need the `no_root_squash` options for
+this to work, but I'm using it to make the management of VM images easier on the
+VM hosts. Feel free to remove it if you cannot tolerate the potential security
+issues.
+
+  $ echo "/data/vmstorage/ \
+    10.47.100.3/32(rw,no_root_squash,no_subtree_check) \
+    10.47.100.4/32(rw,no_root_squash,no_subtree_check)" \
+    | sudo tee -a /etc/exports
+  $ sudo exportfs -arv
+  exporting 10.47.100.3/32:/data/vmstorage
+  exporting 10.47.100.4/32:/data/vmstorage
+
+And that should be everything for the storage host!
+
+## Virtual Machine Host Configuration
+
+Each virtual machine should be setup identically, with only the hostname and
+local IP addresses being different. First, since we are putting the VMs on the
+same network segment as the host machine, we need to setup a network bridge.
+CentOS 8 uses NetworkManager as it's default networking daemon, so we will be
+configuring that.
+
+**Be careful here, if you use SSH to connect to the machine, and you misconfigure
+networking, you will need physical access to the machine (or console access) to
+fix it!**
+
+  $ sudo nmcli con add type bridge ifname br0
+  Connection 'bridge-br0' (539a9c68-d34e-4aa4-ac16-2d354d488ab0) successfully added.
+  $ # My network device is `eth0`, change it to your network device
+  $ sudo nmcli con add type bridge-slave ifname eth0 master br0
+  Connection 'bridge-slave-eth0' (b9444a2a-edd4-4a1f-bbca-4c5b45187837) successfully added.
+
+I will also disable Spanning Tree Protocol (STP) on the bridge to speed up
+network startup significantly. **Make sure there are no loops in your network!**
+If you can't remove the loops in your network, then you need to leave STP
+enabled.
+
+  $ sudo nmcli con modify bridge-br0 bridge.stp no
+
+Now setup the IP configuration like your primary networking device, along with
+your DNS settings. If you don't know what to put in for `ipv4.dns-search`, then
+you don't need to set it. You would want it only if your home network uses a
+domain (my network is set to use `doublej472.bak`).
+
+  $ sudo nmcli con modify bridge-br0 ipv4.addresses 10.47.100.3/16
+  $ sudo nmcli con modify bridge-br0 ipv4.gateway 10.47.0.1
+  $ sudo nmcli con modify bridge-br0 ipv4.dns 10.47.0.1
+  $ sudo nmcli con modify bridge-br0 ipv4.dns-search doublej472.bak
+
+If your network bridge slave device is being used already, then the bridge will
+not start. Simply activate the network slave device to bring up your bridge.
+**If your network is misconfigured, this is where you may lose your SSH
+session!**
+
+  $ sudo nmcli con up bridge-slave-eth0
+  $ # You might need to wait ~10 seconds for any input to be returned, even
+  $ # more if you have STP enabled
+
+Check to make sure everything is configured correctly:
+
+  $ ip a show eth0
+  2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel master br0 state UP group default qlen 1000
+      link/ether 52:54:00:1f:11:4c brd ff:ff:ff:ff:ff:ff
+  $ # We can see `master br0` in the above command, so the bridge is the master
+  $ # to this interface. There is also no ipv4 configuration.
+  $ ip a show br0
+  3: br0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+      link/ether 52:54:00:1f:11:4c brd ff:ff:ff:ff:ff:ff
+      inet 10.47.100.3/16 brd 10.47.255.255 scope global noprefixroute br0
+         valid_lft forever preferred_lft forever
+  $ # And the br0 interface has the correct IP, we can test our connection to
+  $ # the outside world now (forcing IPv4).
+  $ ping -4 google.com
+  ...<snip>...
+  --- google.com ping statistics ---
+  5 packets transmitted, 5 received, 0% packet loss, time 11ms
+  rtt min/avg/max/mdev = 8.783/10.590/13.342/1.746 ms
+
+Everything looks good, make sure you duplicate this on the other VM host with a
+different IP address!
+
+Now we need to install and configure libvirt. CentOS has libvirt split up over
+multiple packages, and will create no default configuration if you don't install
+any `libvirt-daemon-config*` packages. I will be installing only what is
+necessary, feel free to install other packages if you want them.
+
+  $ sudo yum install -y libvirt-daemon libvirt-admin libvirt-client \
+    libvirt-daemon-kvm libvirt-daemon-driver-qemu \
+    libvirt-daemon-driver-network libvirt-daemon-driver-storage \
+    libvirt-daemon-driver-storage-core virt-install nfs-utils
+  $ sudo systemctl enable libvirtd
+  $ sudo systemctl start libvirtd
+
+Now we need to setup the storage backend, with the local directory being at
+`/data/vms`:
+
+  $ sudo mkdir -p /data/vms
+  $ sudo virsh pool-define-as \
+    --name vmstorage --type netfs \
+    --source-host 10.47.100.5 --source-path /data/vmstorage \
+    --source-format auto --target /data/vms
+  $ sudo virsh pool-autostart vmstorage
+  $ sudo virsh pool-start vmstorage
+
+You should see the NFS directory mounted at `/data/vms`. If you get any errors
+about permissions, check the `/etc/exports` file on the storage host, something
+is probably wrong there, or you forgot to run `exportfs -arv` after editing that
+file.
+
+At this point you can create working virtual machines manually, but that takes
+too long! I want to spin up virtual machines **FAST**! To do that, we need to
+use `cloud-init` enabled images. I will be using the Debian 10 cloud-init image
+here as an example.
+
+  $ sudo curl -L \
+    https://cdimage.debian.org/cdimage/openstack/current/debian-10.1.3-20191003-openstack-amd64.qcow2 \
+    -o /data/vms/debian-10-base.qcow2
+  $ # if we touch files in /data/vms we need to run the following command for it
+  $ # to be reflected in libvirt.
+  $ sudo virsh pool-refresh vmstorage
+
+**Don't use the base image directly!** You want to create copies of that file
+for each VM, which can either be done with `cp` for normal copies, or `qemu-img`
+if you want to create a copy-on-write copy which reduces disk space
+significantly by only storing the difference between the base image and the VM.
+
+At this point, it will be easier if you use some scripts I wrote for
+provisioning VMs, especially if you want to provision several VMs rapidly. Each
+VM requires it's own ISO file that contains the configuration for the VM, I've
+automated it for you so you don't need to manually run this process every time
+you create a VM. I've also automated the base image copy using `qemu-img`, and
+some basic VM configuration.
+
+  $ sudo su -
+  # yum install -y git
+  # git clone https://github.com/doublej472/libvirt-scripts.git
+  # cd libvirt-scripts
+  # # If you want to use the exact revision I used for this blog, run this:
+  # git checkout v0.1
+
+And now we can create a VM from the base image! my scripts assumes you have a
+dhcp server running on your network, otherwise you will need to specify the
+network configuration manually in the `meta-data` file, which is created in the
+`create-local-config.sh` file. [Here is some documentation for
+that.](https://cloudinit.readthedocs.io/en/latest/topics/network-config-format-v2.html)
+
+In this case I want to create a VM called `testvm` with the network domain
+`doublej472.bak` (you can make something up here if you don't have one), 2
+vCPUs, 2048 megabytes of RAM, 10GB of disk space, using
+/data/vms/debian-10-base.qcow2 as the base image, with the user debian (which
+has your SSH keys installed), and with a random network MAC address.
+
+  # ./create-vm.sh testvm doublej472.bak 2 $((2*1024)) 10G \
+    /data/vms/debian-10-base.qcow2 debian $(./gen-mac-address.sh)
+
+After a short amount of time (~20 seconds in my case) you should be able to
+login to your VM as the user `debian` with the specified SSH key(s).
+
+  $ ssh debian@testvm.doublej427.bak
+  The authenticity of host 'testvm.doublej472.bak (10.47.0.127)' can't be established.
+  ECDSA key fingerprint is SHA256:cDs7SMDZLt4AWf+qvHgtrnHeiaqLfg/ji/nYbss9YPU.
+  Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+  Warning: Permanently added 'testvm.doublej472.bak,10.47.0.127' (ECDSA) to the list of known hosts.
+  Linux testvm 4.19.0-6-cloud-amd64 #1 SMP Debian 4.19.67-2+deb10u1 (2019-09-20) x86_64
+
+  The programs included with the Debian GNU/Linux system are free software;
+  the exact distribution terms for each program are described in the
+  individual files in /usr/share/doc/*/copyright.
+
+  Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+  permitted by applicable law.
+  debian@testvm:~$
+
+Lastly, if you want p2p live migration to work between the VM hosts (there are
+other forms of live migration, such as tunneled or direct), you need to setup
+SSH keys for the root user on each host, and allow each host to login over SSH
+to each other using those keys. **Make sure you do this for the `root` user!**
+
+  (vmhost1) # ssh-keygen
+  (vmhost1) # # Set a password if you want, you will need to type it on every migration if
+  (vmhost1) # # you do
+  (vmhost1) # cat ~/.ssh/id_rsa.pub
+  (vmhost1) # # Copy the output of the above command
+  # move hosts
+  (vmhost2) # mkdir -p ~/.ssh
+  (vmhost2) # echo "<PASTE SSH PUBLIC KEY HERE> > ~/.ssh/authorized_keys"
+  (vmhost2) # ssh-keygen
+  (vmhost2) # cat ~/.ssh/id_rsa.pub
+  (vmhost2) # # Copy the output of the above command again
+  # move hosts
+  (vmhost1) # echo "<PASTE SSH PUBLIC KEY HERE> > ~/.ssh/authorized_keys"
+  # # Now running on both hosts
+  # sed -i 's/PermitRootLogin no/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+  # systemctl restart sshd
+  # # you also need to verify the host key on each server, which can be done with:
+  # ssh root@<OTHER_HOST_IP>
+  # # answer yes to the host key verification prompt
+
+And that's about it! You can now test live migrations by running this command:
+
+  # # On vmhost1 (10.47.100.3)
+  # virsh list
+   Id    Name                           State
+  ----------------------------------------------------
+   1     testvm                         running
+  # sudo virsh migrate --live --verbose --undefinesource --persistent --p2p testvm qemu+ssh://10.47.100.4/system
+  Migration: [100 %]
+  # virsh list
+   Id    Name                           State
+  ----------------------------------------------------
+
+  # # On vmhost2 (10.47.100.4)
+  # virsh list
+   Id    Name                           State
+  ----------------------------------------------------
+   1     testvm                         running
+
+While the live migration is happening, and immediately afterwards, you will be
+able to connect to the VM normally, it preserves its IP address during the
+process. If you kept the SSH session to the VM open while the migration was
+happening, everything will still work fine! (If you have STP enabled on the
+bridge, it may take several seconds for it to recognize that this has changed)
+
+I hope you enjoyed this blog post, it was certainly a lot of fun to write! I'm
+fairly happy with how easy this was to setup on CentOS 8, everything worked very
+well. If you notice any issues feel free to leave a open an issue or create a
+Pull Request at [[https://github.com/doublej472/doublej472-blog]], see you next
+post!

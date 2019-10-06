@@ -10,6 +10,7 @@ POSTS_PER_PAGE = 10
 POSTS_PER_PAGE_ATOM = 10
 
 POSTS = \
+	libvirt-cluster \
 	blogsandblogc \
 	$(NULL)
 

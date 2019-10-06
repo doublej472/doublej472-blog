@@ -77,3 +77,13 @@
   color: #303030;
   text-decoration: underline;
 }
+
+pre {
+  background: #dfdfdf;
+  padding: 0.3rem;
+}
+
+code {
+  background: #dfdfdf;
+  font-size: 1.0rem;
+}
