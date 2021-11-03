@@ -155,4 +155,7 @@ endif
 clean:
 	rm -rf "$(OUTPUT_DIR)"
 
+upload:
+	aws s3 sync --acl public-read --delete _build/ s3://blog-doublej472/
+
 .PHONY: all clean
