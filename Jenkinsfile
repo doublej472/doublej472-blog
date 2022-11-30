@@ -6,17 +6,16 @@ pipeline {
               stage('Prepare') {
                      steps {
                             sh '''
-                            if [ ! -f $JENKINS_HOME/bin/blogc ]; then
-                                   mkdir -vp $JENKINS_HOME/bin
-                                   curl -sL https://github.com/blogc/blogc/releases/download/v0.20.1/blogc-static-amd64-0.20.1.xz | xz -d > $JENKINS_HOME/bin
-                                   chmod +x $JENKINS_HOME/bin/blogc
+                            if [ ! -f ./blogc ]; then
+                                   curl -sL https://github.com/blogc/blogc/releases/download/v0.20.1/blogc-static-amd64-0.20.1.xz | xz -d > ./blogc
+                                   chmod +x ./blogc
                             fi
                             '''
                      }
               }
               stage('Build') {
                      steps {
-                            sh 'make BLOGC=$JENKINS_HOME/bin/blogc all'
+                            sh 'make BLOGC=./blogc all'
                      }
               }
               stage('Deploy') {
