@@ -17,7 +17,7 @@ pipeline {
                                           ssh-keyscan static.doublej472.com >> ~/.ssh/known_hosts
                                    '''
 
-                                   sh 'rsync -e "ssh -i ${keyfile}" -Rpv --delete-after _build/ blogdeploy@static.doublej472.com:/data/blog/'
+                                   sh 'rsync -e "ssh -i ${keyfile}" -rPv --delete-after _build/ blogdeploy@static.doublej472.com:/data/blog/'
                             }
                      }
               }
