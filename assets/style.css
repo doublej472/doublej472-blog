@@ -22,13 +22,21 @@
 }
 
 .entry-header {
-  padding: 0.6rem;
   border-bottom: 2px solid black;
 }
 
 .entry-header-title {
   margin: 0rem;
+  padding: 0.4rem 0.8rem 0.4rem 0.8rem;
   font-size: 2rem;
+  border-bottom: 2px solid black;
+}
+
+.entry-header-date {
+  margin: 0rem;
+  padding: 0.4rem 0.8rem 0.4rem 0.8rem;
+  font-size: 1rem;
+  background-color: lightgrey;
 }
 
 .entry {

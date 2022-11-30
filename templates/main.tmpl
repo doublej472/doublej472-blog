@@ -26,6 +26,7 @@ body {
       <a class="basic-link" href="{{ BASE_URL }}/post/{{ FILENAME }}/index.html">
         <div class="entry-header">
           <h3 class="entry-header-title">{{ TITLE }}</h3>
+          {% ifdef DATE_FORMATTED %}<p class="entry-header-date">{{ DATE_FORMATTED }}</p>{% endif %}
         </div>
       </a>
       <article class="entry">
@@ -56,6 +57,7 @@ body {
       {% ifdef TITLE %}
       <div class="entry-header">
         <h3 class="entry-header-title">{{ TITLE }}</h3>
+        {% ifdef DATE_FORMATTED %}<p class="entry-header-date">{{ DATE_FORMATTED }}</p>{% endif %}
       </div>
       {% endif %}
       <div class="entry">
@@ -70,7 +72,7 @@ body {
     {% endif %}
     {% endblock %}
     <div class="footer-container">
-      <p class="copyright">&copy; 2019 <a href="mailto:{{ AUTHOR_EMAIL }}">{{ AUTHOR_NAME }}</a></p>
+      <p class="copyright">&copy; 2022 <a href="mailto:{{ AUTHOR_EMAIL }}">{{ AUTHOR_NAME }}</a></p>
     </div>
   </body>
 </html>
